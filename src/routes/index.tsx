@@ -172,6 +172,9 @@ function Index() {
     }, 2500);
   };
 
+  const typingProfile = profiles[typingIndex];
+  const paidMember = paidMembers[paidIndex];
+
   if (loading) {
     return (
       <div className="splash-screen">
@@ -248,16 +251,16 @@ function Index() {
         </section>
       </main>
 
-      {typingVisible && (
-        <Button variant="ghost" className="typing-toast" onClick={() => startChat(profiles[typingIndex])}>
-          <img src={profiles[typingIndex].image} alt={profiles[typingIndex].name} />
-          <span><b>{profiles[typingIndex].name} ✨</b><em>is typing a message...</em></span>
+      {typingVisible && typingProfile && (
+        <Button variant="ghost" className="typing-toast" onClick={() => startChat(typingProfile)}>
+          <img src={typingProfile.image} alt={typingProfile.name} />
+          <span><b>{typingProfile.name} ✨</b><em>is typing a message...</em></span>
         </Button>
       )}
-      {paidVisible && (
+      {paidVisible && paidMember && (
         <div className="paid-toast" role="status" aria-live="polite">
           <span className="paid-check">✓</span>
-          <span><strong><b>{paidMembers[paidIndex].name}</b> ametoa hivi punde {paidMembers[paidIndex].amount}</strong><small>{paidMembers[paidIndex].time}</small></span>
+          <span><strong><b>{paidMember.name}</b> ametoa hivi punde {paidMember.amount}</strong><small>{paidMember.time}</small></span>
         </div>
       )}
       <Button asChild className="customer-care"><a href={supportUrl}><Headphones />Customer Care</a></Button>
