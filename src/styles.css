@@ -130,10 +130,35 @@
 .help-link strong { font-size: 12px; }
 .help-link small { color: var(--muted-foreground); font-size: 10px; line-height: 1.35; }
 .reviews blockquote { margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; font-size: 12px; line-height: 1.55; }
-.typing-toast { position: fixed; left: 15px; bottom: 72px; z-index: 20; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--primary); border-radius: 18px; background: var(--card); box-shadow: 0 7px 23px color-mix(in oklab, var(--foreground) 15%, transparent); }
+.typing-toast { position: fixed; left: 15px; bottom: 76px; z-index: 40; width: auto; height: auto; display: flex; align-items: center; justify-content: flex-start; gap: 8px; padding: 8px 12px; border: 1px solid var(--primary); border-radius: 18px; color: var(--foreground); background: var(--card); box-shadow: 0 7px 23px color-mix(in oklab, var(--foreground) 15%, transparent); animation: toast-enter .3s ease-out; }
 .typing-toast img { width: 39px; height: 39px; border-radius: 50%; object-fit: cover; }
-.typing-toast span { display: flex; flex-direction: column; font-size: 10px; }
+.typing-toast span { display: flex; flex-direction: column; align-items: flex-start; font-size: 10px; }
 .typing-toast em { color: var(--primary); font-size: 9px; font-weight: 800; }
+.paid-toast { position: fixed; top: 84px; right: 14px; z-index: 40; width: min(calc(100% - 28px), 330px); display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid color-mix(in oklab, var(--primary) 45%, var(--border)); border-radius: 14px; background: var(--card); box-shadow: 0 8px 26px color-mix(in oklab, var(--foreground) 16%, transparent); animation: toast-enter .3s ease-out; }
+.paid-check { display: grid; flex: none; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: var(--primary-foreground); background: var(--primary); font-weight: 900; }
+.paid-toast > span:last-child { display: flex; flex-direction: column; gap: 3px; font-size: 11px; line-height: 1.35; }
+.paid-toast strong { font-weight: 600; }
+.paid-toast strong b { color: var(--primary); }
+.paid-toast small { color: var(--muted-foreground); font-size: 9px; }
+.scanning-overlay { position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 28px; color: var(--primary-foreground); background: color-mix(in oklab, var(--foreground) 87%, transparent); text-align: center; }
+.scanning-overlay svg { width: 48px; height: 48px; color: var(--primary); animation: spin 1s linear infinite; }
+.scanning-overlay strong { margin-top: 8px; font-size: 17px; }
+.scanning-overlay span { color: color-mix(in oklab, var(--primary-foreground) 75%, transparent); font-size: 13px; }
+.scanning-overlay p { max-width: 390px; margin: 24px 0 0; padding: 12px; border: 1px solid color-mix(in oklab, var(--primary-foreground) 23%, transparent); border-radius: 12px; font-size: 11px; line-height: 1.5; }
+.payment-dialog { width: min(calc(100% - 28px), 390px); gap: 16px; border-radius: 20px; padding: 24px 20px 20px; background: var(--card); }
+.payment-heading { align-items: center; text-align: center; }
+.payment-avatar { position: relative; margin-bottom: 5px; }
+.payment-avatar img { width: 68px; height: 68px; border: 3px solid var(--border); border-radius: 50%; object-fit: cover; }
+.payment-avatar i { position: absolute; right: 2px; bottom: 5px; width: 12px; height: 12px; border: 2px solid var(--card); border-radius: 50%; background: oklch(0.7 0.19 159); }
+.payment-heading h2 { color: var(--destructive); font-size: 20px; }
+.payment-heading > span { color: var(--foreground); font-size: 12px; font-weight: 800; }
+.payment-heading p { max-width: 290px; line-height: 1.5; }
+.payment-amount { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 16px 12px; border: 1px solid color-mix(in oklab, var(--primary) 35%, var(--border)); border-radius: 14px; background: var(--secondary); text-align: center; }
+.payment-amount strong { color: var(--primary); font-size: 27px; }
+.payment-amount span { color: var(--muted-foreground); font-size: 11px; font-weight: 700; }
+.payment-amount button { margin-top: 4px; border-color: color-mix(in oklab, var(--primary) 38%, var(--border)); color: var(--foreground); background: var(--card); font-size: 10px; }
+.payment-note { margin: 0; color: var(--destructive); font-size: 10px; font-weight: 800; line-height: 1.45; text-align: center; }
+.payment-cta { width: 100%; min-height: 48px; font-size: 12px; font-weight: 900; }
 .customer-care { position: fixed; right: 15px; bottom: 84px; z-index: 20; height: 48px; padding: 0 22px; border-radius: 999px; font-size: 14px; font-weight: 800; box-shadow: 0 5px 22px color-mix(in oklab, var(--primary) 42%, transparent); }
 .register-cta { position: fixed; left: 50%; bottom: 12px; z-index: 21; width: min(calc(100% - 24px), 426px); height: 49px; transform: translateX(-50%); border-radius: 12px; font-size: 13px; font-weight: 900; box-shadow: 0 6px 20px color-mix(in oklab, var(--primary) 35%, transparent); }
 
@@ -144,6 +169,9 @@
   .customer-care { bottom: 32px; }
   .register-cta { display: none; }
 }
+
+@keyframes toast-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 390px) {
   .site-header { padding-inline: 10px; }
@@ -156,4 +184,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .typing-toast, .paid-toast, .scanning-overlay svg { animation: none; }
 }
