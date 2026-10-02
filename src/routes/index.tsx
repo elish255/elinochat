@@ -1,27 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Bell,
-  ChevronRight,
-  CircleDollarSign,
-  Download,
-  Headphones,
-  LoaderCircle,
-  Menu,
-  MessageSquare,
-  Star,
-  WalletCards,
-  X,
+  Bell, ChevronRight, CircleDollarSign, Download, Headphones, Menu, MessageSquare, Star, WalletCards, X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { getProfile, getSession } from "@/lib/api";
+import { profiles, type Profile } from "@/lib/profiles";
 import {
   Sheet,
   SheetClose,
@@ -56,24 +41,11 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const registerUrl = "https://moxeraagencies.com/register?ref=AMTIN12";
+const registerUrl = "/register";
+const loginUrl = "/login";
+const dashboardUrl = "/dashboard";
 const whatsappUrl = "https://whatsapp.com/channel/0029VbD6LxNIiRos6Av1Sn1A";
 const supportUrl = "sms:255659970719?body=Hello,%20Nina%20swali%20kuhusu%20ElinoChat";
-
-const profiles = [
-  { name: "Ivan", image: "https://randomuser.me/api/portraits/men/32.jpg", rating: "4.9", time: "2 hours", country: "USA 🇺🇸", tzs: "80,183", usd: "32.09" },
-  { name: "Angélica", image: "https://randomuser.me/api/portraits/women/44.jpg", rating: "4.8", time: "1 hour 30 minutes", country: "Australia 🇦🇺", tzs: "73,826", usd: "28.02" },
-  { name: "Carmen", image: "https://randomuser.me/api/portraits/women/8.jpg", rating: "4.6", time: "40 minutes", country: "Canada 🇨🇦", tzs: "41,743", usd: "16.37" },
-  { name: "Dejalme", image: "https://randomuser.me/api/portraits/men/93.jpg", rating: "4.5", time: "1 hour 30 minutes", country: "Switzerland 🇨🇭", tzs: "73,826", usd: "28.02" },
-  { name: "Evêncio", image: "https://randomuser.me/api/portraits/men/49.jpg", rating: "4.7", time: "1 hour", country: "Japan 🇯🇵", tzs: "51,089", usd: "19.91" },
-  { name: "Riley", image: "https://randomuser.me/api/portraits/men/53.jpg", rating: "5.0", time: "1 hour 10 minutes", country: "Norway 🇳🇴", tzs: "67,303", usd: "24.43" },
-  { name: "Arquimedes", image: "https://randomuser.me/api/portraits/men/59.jpg", rating: "5.0", time: "2 hours", country: "Germany 🇩🇪", tzs: "87,945", usd: "32.31" },
-  { name: "Nino", image: "https://randomuser.me/api/portraits/women/89.jpg", rating: "5.0", time: "30 minutes", country: "Brazil 🇧🇷", tzs: "32,704", usd: "11.31" },
-  { name: "Grace", image: "https://randomuser.me/api/portraits/women/68.jpg", rating: "4.7", time: "25 minutes", country: "UK 🇬🇧", tzs: "25,817", usd: "10.25" },
-  { name: "Antonin", image: "https://randomuser.me/api/portraits/men/72.jpg", rating: "4.6", time: "40 minutes", country: "France 🇫🇷", tzs: "41,909", usd: "15.60" },
-];
-
-type Profile = (typeof profiles)[number];
 
 const paidMembers = [
   { name: "Amina", amount: "TSh 38,500", time: "9s ago" },
@@ -84,8 +56,9 @@ const paidMembers = [
 
 const menuItems = [
   ["Home", "#top"],
-  ["Fungua Account Automatic", registerUrl],
-  ["Withdrawal", "#withdrawal"],
+  ["Jisajili", registerUrl],
+  ["Login", loginUrl],
+  ["Dashboard", dashboardUrl],
   ["Namna ElinoChat Inavyofanya Kazi", "#profiles"],
   ["FAQ (Maswali na Majibu)", "#reviews"],
   ["WhatsApp Channel", whatsappUrl],
@@ -104,10 +77,6 @@ function BrandMark({ large = false }: { large?: boolean }) {
 function Index() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState(true);
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [scanningProfile, setScanningProfile] = useState<Profile | null>(null);
-  const [showPayment, setShowPayment] = useState(false);
-  const [showTzs, setShowTzs] = useState(false);
   const [typingIndex, setTypingIndex] = useState(0);
   const [typingVisible, setTypingVisible] = useState(false);
   const [paidIndex, setPaidIndex] = useState(0);
@@ -161,15 +130,19 @@ function Index() {
     };
   }, [loading]);
 
-  const startChat = (profile: Profile) => {
-    setShowPayment(false);
-    setScanningProfile(profile);
-    window.setTimeout(() => {
-      setScanningProfile(null);
-      setSelectedProfile(profile);
-      setShowTzs(false);
-      setShowPayment(true);
-    }, 2500);
+  const startChat = async (profile: Profile) => {
+    const session = getSession();
+    if (!session) { window.location.href = registerUrl; return; }
+    try {
+      const account = await getProfile();
+      if (account?.account_status === "active") {
+        window.location.href = `/chat/${profile.slug}`;
+      } else {
+        window.location.href = "/payment";
+      }
+    } catch {
+      window.location.href = "/payment";
+    }
   };
 
   const typingProfile = profiles[typingIndex];
@@ -215,10 +188,10 @@ function Index() {
       </header>
 
       <main className="app-column">
-        <div className="action-row" id="withdrawal">
-          <Button asChild className="top-action install"><a href={registerUrl}><Download />Install</a></Button>
+        <div className="action-row">
+          <Button asChild className="top-action install"><a href={registerUrl}><Download />Jisajili</a></Button>
           <div className="balance"><WalletCards /><span>CURRENT BALANCE<strong>0.00 TZS</strong></span></div>
-          <Button asChild className="top-action withdrawal"><a href={registerUrl}><CircleDollarSign />Withdrawal</a></Button>
+          <Button asChild className="top-action withdrawal"><a href={dashboardUrl}><CircleDollarSign />Dashboard</a></Button>
         </div>
 
         <section className="notice-shell" aria-label="Notifications">
@@ -229,7 +202,6 @@ function Index() {
               <p>Mnakumbushwa kutumia lugha zilizo za maadili ili kampuni yetu kuzidi kupata sifa zaidi kwenye nchi zaidi ili kupata Foreigners zaidi wa kujifunza Kiswahili.</p>
             </div>
           )}
-          <div className="payments"><strong>Njia Rahisi Za kutoa Pesa(withdrawal) Zako Automatic</strong><span>M-Pesa • Mix by Yas • Halopesa • Airtel Money • NMB bank • CRDB • NBC</span></div>
         </section>
 
         <h1 id="profiles" className="profiles-title">TAP ANY PROFILE TO START CHAT AND GET PAID</h1>
@@ -264,38 +236,8 @@ function Index() {
         </div>
       )}
       <Button asChild className="customer-care"><a href={supportUrl}><Headphones />Customer Care</a></Button>
-      <Button asChild className="register-cta"><a href={registerUrl}>FUNGUA ACCOUNT AUTOMATIC</a></Button>
+      <Button asChild className="register-cta"><a href={registerUrl}>JISAJILI SASA</a></Button>
 
-      {scanningProfile && (
-        <div className="scanning-overlay" role="status" aria-live="assertive">
-          <LoaderCircle />
-          <strong>🔍 Inakagua kwenye mfumo...</strong>
-          <span>Tafadhali subiri...</span>
-          <p>⚠️ KUMBUKA: Usitumie lugha zisizo na nidhamu unapochati ili kulinda vigezo na masharti ya jamii yetu.</p>
-        </div>
-      )}
-
-      <Dialog open={showPayment} onOpenChange={setShowPayment}>
-        <DialogContent className="payment-dialog">
-          {selectedProfile && (
-            <>
-              <DialogHeader className="payment-heading">
-                <div className="payment-avatar"><img src={selectedProfile.image} alt={selectedProfile.name} /><i /></div>
-                <DialogTitle>Hauonekani kwenye Mfumo!</DialogTitle>
-                <span>{selectedProfile.name} • {selectedProfile.country}</span>
-                <DialogDescription>Fungua akaunti ili uanze kuchati na kulipwa moja kwa moja.</DialogDescription>
-              </DialogHeader>
-              <div className="payment-amount">
-                <strong>{showTzs ? `TSh ${selectedProfile.tzs}` : `$${selectedProfile.usd} USD`}</strong>
-                <span>kwa dakika/masaa {selectedProfile.time} ya kuchati</span>
-                <Button variant="outline" size="sm" onClick={() => setShowTzs((value) => !value)}>⇄ {showTzs ? "Badili kwenda USD" : "Badili kwenda TSh"}</Button>
-              </div>
-              <p className="payment-note">🛑 NOTE: Fungua Akaunti kwanza ili uweze kutoa pesa zako</p>
-              <Button asChild className="payment-cta"><a href={registerUrl}>FUNGUA ACCOUNT AUTOMATIC</a></Button>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
@@ -303,17 +245,17 @@ function Index() {
 function ProfileCard({ profile, onStartChat }: { profile: Profile; onStartChat: (profile: Profile) => void }) {
   return (
     <article className="profile-card">
-      <a href={registerUrl} className="profile-head" aria-label={`Anza chat na ${profile.name}`}>
+      <button type="button" className="profile-head profile-head-button" onClick={() => onStartChat(profile)} aria-label={`Anza chat na ${profile.name}`}>
         <div className="avatar-wrap"><img src={profile.image} alt={profile.name} /><i /></div>
         <div><h2>{profile.name} <small>✨</small></h2><p><i />online</p><span><Star />{profile.rating}</span></div>
-      </a>
+      </button>
       <div className="profile-details">
         <p><b>CHAT TIME :</b> {profile.time}</p>
         <p><b>WANTS :</b> <em>Teach Swahili / Kujifunza Kiswahili ({profile.country})</em></p>
       </div>
       <div className="profile-actions">
         <Button onClick={() => onStartChat(profile)}><MessageSquare />START CHAT</Button>
-        <a href={registerUrl} className="earn"><strong>TZS {profile.tzs}</strong><span>Earn USD {profile.usd}</span></a>
+        <button type="button" className="earn" onClick={() => onStartChat(profile)}><strong>TZS {profile.tzs}</strong><span>Earn USD {profile.usd}</span></button>
       </div>
     </article>
   );
