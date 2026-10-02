@@ -5,6 +5,7 @@ import {
   CircleDollarSign,
   Download,
   Headphones,
+  LoaderCircle,
   Menu,
   MessageSquare,
   Star,
@@ -14,6 +15,13 @@ import {
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Sheet,
   SheetClose,
@@ -65,6 +73,15 @@ const profiles = [
   { name: "Antonin", image: "https://randomuser.me/api/portraits/men/72.jpg", rating: "4.6", time: "40 minutes", country: "France 🇫🇷", tzs: "41,909", usd: "15.60" },
 ];
 
+type Profile = (typeof profiles)[number];
+
+const paidMembers = [
+  { name: "Amina", amount: "TSh 38,500", time: "9s ago" },
+  { name: "Sarah", amount: "TSh 60,000", time: "5s ago" },
+  { name: "Lydia", amount: "TSh 30,000", time: "3s ago" },
+  { name: "Kelvin", amount: "TSh 45,700", time: "7s ago" },
+];
+
 const menuItems = [
   ["Home", "#top"],
   ["Fungua Account Automatic", registerUrl],
@@ -87,11 +104,76 @@ function BrandMark({ large = false }: { large?: boolean }) {
 function Index() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState(true);
+  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [scanningProfile, setScanningProfile] = useState<Profile | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [showTzs, setShowTzs] = useState(false);
+  const [typingIndex, setTypingIndex] = useState(0);
+  const [typingVisible, setTypingVisible] = useState(false);
+  const [paidIndex, setPaidIndex] = useState(0);
+  const [paidVisible, setPaidVisible] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setLoading(false), 1150);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    let hideTimer: number | undefined;
+    const showTimer = window.setTimeout(() => {
+      setTypingVisible(true);
+      hideTimer = window.setTimeout(() => setTypingVisible(false), 4500);
+    }, 4000);
+    const rotationTimer = window.setInterval(() => {
+      setTypingIndex((current) => (current + 1) % profiles.length);
+      setTypingVisible(true);
+      if (hideTimer) window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(() => setTypingVisible(false), 4500);
+    }, 12000);
+
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearInterval(rotationTimer);
+      if (hideTimer) window.clearTimeout(hideTimer);
+    };
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    let showTimer: number | undefined;
+    let hideTimer: number | undefined;
+    const scheduleToast = () => {
+      showTimer = window.setTimeout(() => {
+        setPaidVisible(true);
+        hideTimer = window.setTimeout(() => {
+          setPaidVisible(false);
+          setPaidIndex((current) => (current + 1) % paidMembers.length);
+          scheduleToast();
+        }, 3500);
+      }, 5000);
+    };
+    scheduleToast();
+
+    return () => {
+      if (showTimer) window.clearTimeout(showTimer);
+      if (hideTimer) window.clearTimeout(hideTimer);
+    };
+  }, [loading]);
+
+  const startChat = (profile: Profile) => {
+    setShowPayment(false);
+    setScanningProfile(profile);
+    window.setTimeout(() => {
+      setScanningProfile(null);
+      setSelectedProfile(profile);
+      setShowTzs(false);
+      setShowPayment(true);
+    }, 2500);
+  };
+
+  const typingProfile = profiles[typingIndex];
+  const paidMember = paidMembers[paidIndex];
 
   if (loading) {
     return (
@@ -152,7 +234,7 @@ function Index() {
 
         <h1 id="profiles" className="profiles-title">TAP ANY PROFILE TO START CHAT AND GET PAID</h1>
         <section className="profile-list" aria-label="Online chat profiles">
-          {profiles.map((profile) => <ProfileCard key={profile.name} profile={profile} />)}
+          {profiles.map((profile) => <ProfileCard key={profile.name} profile={profile} onStartChat={startChat} />)}
         </section>
 
         <section id="assistance" className="info-section">
@@ -169,14 +251,56 @@ function Index() {
         </section>
       </main>
 
-      <div className="typing-toast"><img src="https://randomuser.me/api/portraits/men/3.jpg" alt="Hector" /><span><b>Hector</b><em>is typing a message...</em></span></div>
+      {typingVisible && typingProfile && (
+        <Button variant="ghost" className="typing-toast" onClick={() => startChat(typingProfile)}>
+          <img src={typingProfile.image} alt={typingProfile.name} />
+          <span><b>{typingProfile.name} ✨</b><em>is typing a message...</em></span>
+        </Button>
+      )}
+      {paidVisible && paidMember && (
+        <div className="paid-toast" role="status" aria-live="polite">
+          <span className="paid-check">✓</span>
+          <span><strong><b>{paidMember.name}</b> ametoa hivi punde {paidMember.amount}</strong><small>{paidMember.time}</small></span>
+        </div>
+      )}
       <Button asChild className="customer-care"><a href={supportUrl}><Headphones />Customer Care</a></Button>
       <Button asChild className="register-cta"><a href={registerUrl}>FUNGUA ACCOUNT AUTOMATIC</a></Button>
+
+      {scanningProfile && (
+        <div className="scanning-overlay" role="status" aria-live="assertive">
+          <LoaderCircle />
+          <strong>🔍 Inakagua kwenye mfumo...</strong>
+          <span>Tafadhali subiri...</span>
+          <p>⚠️ KUMBUKA: Usitumie lugha zisizo na nidhamu unapochati ili kulinda vigezo na masharti ya jamii yetu.</p>
+        </div>
+      )}
+
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent className="payment-dialog">
+          {selectedProfile && (
+            <>
+              <DialogHeader className="payment-heading">
+                <div className="payment-avatar"><img src={selectedProfile.image} alt={selectedProfile.name} /><i /></div>
+                <DialogTitle>Hauonekani kwenye Mfumo!</DialogTitle>
+                <span>{selectedProfile.name} • {selectedProfile.country}</span>
+                <DialogDescription>Fungua akaunti ili uanze kuchati na kulipwa moja kwa moja.</DialogDescription>
+              </DialogHeader>
+              <div className="payment-amount">
+                <strong>{showTzs ? `TSh ${selectedProfile.tzs}` : `$${selectedProfile.usd} USD`}</strong>
+                <span>kwa dakika/masaa {selectedProfile.time} ya kuchati</span>
+                <Button variant="outline" size="sm" onClick={() => setShowTzs((value) => !value)}>⇄ {showTzs ? "Badili kwenda USD" : "Badili kwenda TSh"}</Button>
+              </div>
+              <p className="payment-note">🛑 NOTE: Fungua Akaunti kwanza ili uweze kutoa pesa zako</p>
+              <Button asChild className="payment-cta"><a href={registerUrl}>FUNGUA ACCOUNT AUTOMATIC</a></Button>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function ProfileCard({ profile }: { profile: (typeof profiles)[number] }) {
+function ProfileCard({ profile, onStartChat }: { profile: Profile; onStartChat: (profile: Profile) => void }) {
   return (
     <article className="profile-card">
       <a href={registerUrl} className="profile-head" aria-label={`Anza chat na ${profile.name}`}>
@@ -188,7 +312,7 @@ function ProfileCard({ profile }: { profile: (typeof profiles)[number] }) {
         <p><b>WANTS :</b> <em>Teach Swahili / Kujifunza Kiswahili ({profile.country})</em></p>
       </div>
       <div className="profile-actions">
-        <Button asChild><a href={registerUrl}><MessageSquare />START CHAT</a></Button>
+        <Button onClick={() => onStartChat(profile)}><MessageSquare />START CHAT</Button>
         <a href={registerUrl} className="earn"><strong>TZS {profile.tzs}</strong><span>Earn USD {profile.usd}</span></a>
       </div>
     </article>
