@@ -20,7 +20,13 @@ function PaymentPage() {
     getProfile().then((profile) => {
       if (!profile) return;
       setPhone(String(profile.phone ?? "")); setProfileName(String(profile.full_name ?? ""));
-      if (profile.account_status === "active") navigate({ to: "/dashboard" });
+      if (profile.account_status === "active" && profile.is_active === true) {
+        navigate({ to: "/dashboard" });
+        return;
+      }
+      if (profile.account_status === "banned" || profile.account_status === "inactive") {
+        navigate({ to: "/login" });
+      }
     }).catch(() => null);
   }, [navigate]);
 

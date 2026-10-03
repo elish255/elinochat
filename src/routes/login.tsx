@@ -20,6 +20,11 @@ function LoginPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.message || "Login imeshindikana.");
       if (remember) saveSession(data.session); else saveSession(data.session);
+      // Users who have not completed payment must never enter the dashboard.
+      if (data.redirectTo === "/payment") {
+        navigate({ to: "/payment" });
+        return;
+      }
       navigate({ to: "/dashboard" });
     } catch (e) { setError(e instanceof Error ? e.message : "Login imeshindikana."); }
     finally { setBusy(false); }

@@ -11,7 +11,19 @@ function DashboardPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   useEffect(() => {
     if (!getSession()) { navigate({ to: "/login" }); return; }
-    Promise.all([getProfile(), getNotifications()]).then(([p, n]) => { setProfile(p); setNotifications(n); }).catch(() => null);
+    getProfile().then((p) => {
+      if (!p) { navigate({ to: "/login" }); return; }
+      if (p.account_status === "pending_payment") {
+        navigate({ to: "/payment" });
+        return;
+      }
+      if (p.account_status === "banned" || p.account_status === "inactive" || p.is_active !== true || p.account_status !== "active") {
+        navigate({ to: "/login" });
+        return;
+      }
+      setProfile(p);
+      return getNotifications();
+    }).then((n) => { if (n) setNotifications(n); }).catch(() => navigate({ to: "/login" }));
   }, [navigate]);
   const signOut = async () => { await logout(); clearSession(); navigate({ to: "/" }); };
   if (!profile) return <div className="center-loading">Inapakia account...</div>;
