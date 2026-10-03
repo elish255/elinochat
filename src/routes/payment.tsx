@@ -19,7 +19,9 @@ function PaymentPage() {
     if (!session) { navigate({ to: "/login" }); return; }
     getProfile().then((profile) => {
       if (!profile) return;
-      setPhone(String(profile.phone ?? "")); setProfileName(String(profile.full_name ?? ""));
+      const savedPhone = String(profile.phone ?? "").replace(/\D/g, "");
+      const localPhone = savedPhone.startsWith("255") ? savedPhone.slice(3, 12) : savedPhone.startsWith("0") ? savedPhone.slice(1, 10) : savedPhone.slice(0, 9);
+      setPhone(localPhone); setProfileName(String(profile.full_name ?? ""));
       if (profile.account_status === "active" && profile.is_active === true) {
         navigate({ to: "/dashboard" });
         return;
@@ -50,7 +52,8 @@ function PaymentPage() {
   const pay = async () => {
     const session = getSession(); if (!session) return navigate({ to: "/login" });
     setStatus("starting"); setMessage("");
-    const normalized = phone.replace(/\D/g, "");
+    const localPhone = phone.replace(/\D/g, "").slice(0, 9);
+    const normalized = `255${localPhone}`;
     try {
       const response = await fetch("/api/payment/create", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ phone: normalized }) });
       const data = await response.json();
@@ -63,7 +66,7 @@ function PaymentPage() {
     <div className="payment-top"><Link to="/" className="payment-brand"><span>EC</span> ElinoChat</Link><span className="country-pill">🇹🇿 Tanzania</span></div>
     <section className="pay-card">
       <div className="pay-header"><div className="pay-icon"><Zap /></div><div><h1>Tanzania</h1><p>Lipia moja kwa moja kwa USSD Push</p></div><span className="tz-flag">🇹🇿</span></div>
-      <div className="pay-body"><label>NAMBA YA SIMU</label><div className="phone-input"><span>🇹🇿 +255</span><input inputMode="numeric" value={phone.replace(/^255/, "")} onChange={(e) => { const raw = e.target.value.replace(/\D/g, ""); const local = raw.startsWith("255") ? raw.slice(3) : raw.replace(/^0/, ""); setPhone(`255${local.slice(0, 9)}`); }} placeholder="06XXXXXXXX" /></div>
+      <div className="pay-body"><label>NAMBA YA SIMU</label><div className="phone-input"><span>🇹🇿 +255</span><input inputMode="numeric" value={phone} onChange={(e) => { const raw = e.target.value.replace(/\D/g, ""); const local = raw.startsWith("255") ? raw.slice(3) : raw.startsWith("0") ? raw.slice(1) : raw; setPhone(local.slice(0, 9)); }} placeholder="7XXXXXXXX" /></div>
       {amount && <div className="pay-amount">Ada ya activation: <strong>TSh {amount.toLocaleString()}</strong></div>}
       <button className="pay-now" disabled={status === "starting" || status === "waiting"} onClick={pay}><LockKeyhole /> {status === "starting" ? "INATUMA..." : status === "waiting" ? "INASUBIRI UTHIBITISHO..." : "LIPA SASA"}</button>
       {message && <div className={`pay-message ${status === "error" || status === "timeout" ? "error" : status === "success" ? "success" : ""}`}>{message}</div>}
